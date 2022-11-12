@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 9+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -13,7 +13,7 @@ Upgrade_Nginx() {
   [ ! -e "${nginx_install_dir}/sbin/nginx" ] && echo "${CWARNING}Nginx is not installed on your system! ${CEND}" && exit 1
   OLD_nginx_ver_tmp=`${nginx_install_dir}/sbin/nginx -v 2>&1`
   OLD_nginx_ver=${OLD_nginx_ver_tmp##*/}
-  Latest_nginx_ver=`curl --connect-timeout 2 -m 3 -s http://nginx.org/en/CHANGES-1.20 | awk '/Changes with nginx/{print$0}' | awk '{print $4}' | head -1`
+  Latest_nginx_ver=`curl --connect-timeout 2 -m 3 -s http://nginx.org/en/CHANGES-1.22 | awk '/Changes with nginx/{print$0}' | awk '{print $4}' | head -1`
   [ -z "${Latest_nginx_ver}" ] && Latest_nginx_ver=`curl --connect-timeout 2 -m 3 -s http://nginx.org/en/CHANGES | awk '/Changes with nginx/{print$0}' | awk '{print $4}' | head -1`
   echo
   echo "Current Nginx Version: ${CMSG}${OLD_nginx_ver}${CEND}"
@@ -48,14 +48,38 @@ Upgrade_Nginx() {
       echo "Press Ctrl+c to cancel or Press any key to continue..."
       char=`get_char`
     fi
-    tar xzf nginx-${NEW_nginx_ver}.tar.gz
-    pushd nginx-${NEW_nginx_ver}
-    make clean
-    sed -i 's@CFLAGS="$CFLAGS -g"@#CFLAGS="$CFLAGS -g"@' auto/cc/gcc # close debug
     ${nginx_install_dir}/sbin/nginx -V &> $$
     nginx_configure_args_tmp=`cat $$ | grep 'configure arguments:' | awk -F: '{print $2}'`
     rm -rf $$
     nginx_configure_args=`echo ${nginx_configure_args_tmp} | sed "s@lua-nginx-module-\w.\w\+.\w\+ @lua-nginx-module-${lua_nginx_module_ver} @" | sed "s@lua-nginx-module @lua-nginx-module-${lua_nginx_module_ver} @" | sed "s@--with-openssl=../openssl-\w.\w.\w\+ @--with-openssl=../openssl-${openssl11_ver} @" | sed "s@--with-pcre=../pcre-\w.\w\+ @--with-pcre=../pcre-${pcre_ver} @"`
+    if [ -n `echo $nginx_configure_args | grep lua-nginx-module` ]; then
+      ${oneinstack_dir}/upgrade.sh --oneinstack > /dev/null
+      src_url=http://mirrors.linuxeye.com/oneinstack/src/luajit2-${luajit2_ver}.tar.gz && Download_src
+      tar xzf luajit2-${luajit2_ver}.tar.gz
+      pushd luajit2-${luajit2_ver}
+      make && make install
+      popd > /dev/null
+      rm -rf luajit2-${luajit2_ver}
+
+      src_url=http://mirrors.linuxeye.com/oneinstack/src/lua-resty-core-${lua_resty_core_ver}.tar.gz && Download_src
+      tar xzf lua-resty-core-${lua_resty_core_ver}.tar.gz
+      pushd lua-resty-core-${lua_resty_core_ver}
+      make install
+      popd > /dev/null
+      rm -rf lua-resty-core-${lua_resty_core_ver}
+
+      src_url=http://mirrors.linuxeye.com/oneinstack/src/lua-resty-lrucache-${lua_resty_lrucache_ver}.tar.gz && Download_src
+      tar xzf lua-resty-lrucache-${lua_resty_lrucache_ver}.tar.gz
+      pushd lua-resty-lrucache-${lua_resty_lrucache_ver}
+      make install
+      popd > /dev/null
+      rm -rf lua-resty-lrucache-${lua_resty_lrucache_ver}
+    fi
+
+    tar xzf nginx-${NEW_nginx_ver}.tar.gz
+    pushd nginx-${NEW_nginx_ver}
+    make clean
+    sed -i 's@CFLAGS="$CFLAGS -g"@#CFLAGS="$CFLAGS -g"@' auto/cc/gcc # close debug
     export LUAJIT_LIB=/usr/local/lib
     export LUAJIT_INC=/usr/local/include/luajit-2.1
     ./configure ${nginx_configure_args}
@@ -203,20 +227,17 @@ Upgrade_Apache() {
   pushd ${oneinstack_dir}/src > /dev/null
   [ ! -e "${apache_install_dir}/bin/httpd" ] && echo "${CWARNING}Apache is not installed on your system! ${CEND}" && exit 1
   OLD_apache_ver="`${apache_install_dir}/bin/httpd -v | grep version | awk -F'/| ' '{print $4}'`"
-  Apache_main_ver="`echo ${OLD_apache_ver} | awk -F. '{print $1 $2}'`"
-  Latest_apache_ver=`curl --connect-timeout 2 -m 3 -s http://httpd.apache.org/download.cgi | awk "/#apache${Apache_main_ver}/{print $2}" | head -1 | grep -oE "2\.[24]\.[0-9]+"`
+  Latest_apache_ver=`curl --connect-timeout 2 -m 3 -s http://httpd.apache.org/download.cgi | awk "/#apache24/{print $2}" | head -1 | grep -oE "2\.[24]\.[0-9]+"`
   Latest_apache_ver=${Latest_apache_ver:-${apache22_ver}}
   echo
   echo "Current Apache Version: ${CMSG}${OLD_apache_ver}${CEND}"
   while :; do echo
     [ "${apache_flag}" != 'y' ] && read -e -p "Please input upgrade Apache Version(Default: ${Latest_apache_ver}): " NEW_apache_ver
     NEW_apache_ver=${NEW_apache_ver:-${Latest_apache_ver}}
-    if [ `echo ${NEW_apache_ver} | awk -F. '{print $1$2}'` == "${Apache_main_ver}" ]; then
+    if [ `echo ${NEW_apache_ver} | awk -F. '{print $1$2}'` == "24" ]; then
       if [ "${NEW_apache_ver}" != "${OLD_apache_ver}" ]; then
-        if [ "${Apache_main_ver}" == '24' ]; then
-          src_url=http://archive.apache.org/dist/apr/apr-${apr_ver}.tar.gz && Download_src
-          src_url=http://archive.apache.org/dist/apr/apr-util-${apr_util_ver}.tar.gz && Download_src
-        fi
+        src_url=http://archive.apache.org/dist/apr/apr-${apr_ver}.tar.gz && Download_src
+        src_url=http://archive.apache.org/dist/apr/apr-util-${apr_util_ver}.tar.gz && Download_src
         [ ! -e "httpd-${NEW_apache_ver}.tar.gz" ] && wget --no-check-certificate -c http://archive.apache.org/dist/httpd/httpd-${NEW_apache_ver}.tar.gz > /dev/null 2>&1
         if [ -e "httpd-${NEW_apache_ver}.tar.gz" ]; then
           echo "Download [${CMSG}apache-${NEW_apache_ver}.tar.gz${CEND}] successfully! "
@@ -240,34 +261,28 @@ Upgrade_Apache() {
       echo "Press Ctrl+c to cancel or Press any key to continue..."
       char=`get_char`
     fi
-    if [ "${Apache_main_ver}" == '24' ]; then
-      # install apr
-      if [ ! -e "${apr_install_dir}/bin/apr-1-config" ]; then
-        tar xzf apr-${apr_ver}.tar.gz
-        pushd apr-${apr_ver} > /dev/null
-        ./configure --prefix=${apr_install_dir}
-        make -j ${THREAD} && make install
-        popd > /dev/null
-        rm -rf apr-${apr_ver}
-      fi
-      # install apr-util
-      if [ ! -e "${apr_install_dir}/bin/apu-1-config" ]; then
-        tar xzf apr-util-${apr_util_ver}.tar.gz
-        pushd apr-util-${apr_util_ver} > /dev/null
-        ./configure --prefix=${apr_install_dir} --with-apr=${apr_install_dir}
-        make -j ${THREAD} && make install
-        popd > /dev/null
-        rm -rf apr-util-${apr_util_ver}
-      fi
+    # install apr
+    if [ ! -e "${apr_install_dir}/bin/apr-1-config" ]; then
+      tar xzf apr-${apr_ver}.tar.gz
+      pushd apr-${apr_ver} > /dev/null
+      ./configure --prefix=${apr_install_dir}
+      make -j ${THREAD} && make install
+      popd > /dev/null
+      rm -rf apr-${apr_ver}
+    fi
+    # install apr-util
+    if [ ! -e "${apr_install_dir}/bin/apu-1-config" ]; then
+      tar xzf apr-util-${apr_util_ver}.tar.gz
+      pushd apr-util-${apr_util_ver} > /dev/null
+      ./configure --prefix=${apr_install_dir} --with-apr=${apr_install_dir}
+      make -j ${THREAD} && make install
+      popd > /dev/null
+      rm -rf apr-util-${apr_util_ver}
     fi
     tar xzf httpd-${NEW_apache_ver}.tar.gz
     pushd httpd-${NEW_apache_ver}
     make clean
-    if [ "${Apache_main_ver}" == '24' ]; then
-      LDFLAGS=-ldl ./configure --prefix=${apache_install_dir} --enable-mpms-shared=all --with-pcre --with-apr=${apr_install_dir} --with-apr-util=${apr_install_dir} --enable-headers --enable-mime-magic --enable-deflate --enable-proxy --enable-so --enable-dav --enable-rewrite --enable-remoteip --enable-expires --enable-static-support --enable-suexec --enable-mods-shared=most --enable-nonportable-atomics=yes --enable-ssl --with-ssl=${openssl_install_dir} --enable-http2 --with-nghttp2=/usr/local
-    elif [ "${Apache_main_ver}" == '22' ]; then
-      LDFLAGS=-ldl ./configure --prefix=${apache_install_dir} --with-mpm=prefork --enable-mpms-shared=all --with-included-apr --enable-headers --enable-mime-magic --enable-deflate --enable-proxy --enable-so --enable-dav --enable-rewrite --enable-expires --enable-static-support --enable-suexec --with-expat=builtin --enable-mods-shared=most --enable-ssl --with-ssl=${openssl_install_dir}
-    fi
+    LDFLAGS=-ldl ./configure --prefix=${apache_install_dir} --enable-mpms-shared=all --with-pcre --with-apr=${apr_install_dir} --with-apr-util=${apr_install_dir} --enable-headers --enable-mime-magic --enable-deflate --enable-proxy --enable-so --enable-dav --enable-rewrite --enable-remoteip --enable-expires --enable-static-support --enable-suexec --enable-mods-shared=most --enable-nonportable-atomics=yes --enable-ssl --with-ssl=${openssl_install_dir} --enable-http2 --with-nghttp2=/usr/local
     make -j ${THREAD}
     if [ -e 'httpd' ]; then
       [[ -d ${apache_install_dir}_bak && -d ${apache_install_dir} ]] && rm -rf ${apache_install_dir}_bak

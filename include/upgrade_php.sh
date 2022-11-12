@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 9+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -12,7 +12,7 @@ Upgrade_PHP() {
   pushd ${oneinstack_dir}/src > /dev/null
   [ ! -e "${php_install_dir}" ] && echo "${CWARNING}PHP is not installed on your system! ${CEND}" && exit 1
   OLD_php_ver=`${php_install_dir}/bin/php-config --version`
-  Latest_php_ver=`curl --connect-timeout 2 -m 3 -s http://php.net/downloads.php | awk '/Changelog/{print $2}' | grep "${OLD_php_ver%.*}"`
+  Latest_php_ver=`curl --connect-timeout 2 -m 3 -s https://www.php.net/releases/active.php | python -mjson.tool | awk '/version/{print $2}' | sed 's/"//g' | grep "${OLD_php_ver%.*}"`
   Latest_php_ver=${Latest_php_ver:-5.5.38}
   echo
   echo "Current PHP Version: ${CMSG}$OLD_php_ver${CEND}"
@@ -43,6 +43,10 @@ Upgrade_PHP() {
     src_url=http://mirrors.linuxeye.com/oneinstack/src/fpm-race-condition.patch && Download_src
     patch -d php-${NEW_php_ver} -p0 < fpm-race-condition.patch
     pushd php-${NEW_php_ver}
+    if [[ "${OLD_php_ver%.*}" =~ ^7.[1-4]$|^8.[0-1]$ ]] && [ -e ext/openssl/openssl.c ] && ! grep -Eqi '^#ifdef RSA_SSLV23_PADDING' ext/openssl/openssl.c; then
+      sed -i '/OPENSSL_SSLV23_PADDING/i#ifdef RSA_SSLV23_PADDING' ext/openssl/openssl.c
+      sed -i '/OPENSSL_SSLV23_PADDING/a#endif' ext/openssl/openssl.c
+    fi
     make clean
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$PKG_CONFIG_PATH
     ${php_install_dir}/bin/php -i |grep 'Configure Command' | awk -F'=>' '{print $2}' | bash

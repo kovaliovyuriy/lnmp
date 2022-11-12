@@ -1,7 +1,7 @@
 #!/bin/bash
 # Author:  Alpha Eva <kaneawk AT gmail.com>
 #
-# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 9+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -17,7 +17,7 @@ checkDownload() {
   fi
 
   # General system utils
-  if [[ ${tomcat_option} =~ ^[1-4]$ ]] || [ "${apache_flag}" == 'y' ] || [[ ${php_option} =~ ^[1-9]$|^1[0-1]$ ]]; then
+  if [ "${with_old_openssl_flag}" == 'y' ]; then
     echo "Download openSSL..."
     src_url=https://www.openssl.org/source/old/1.0.2/openssl-${openssl_ver}.tar.gz && Download_src
     echo "Download cacert.pem..."
@@ -108,9 +108,9 @@ checkDownload() {
       1)
         # MySQL 8.0
         if [ "${IPADDR_COUNTRY}"x == "CN"x ]; then
-          DOWN_ADDR_MYSQL=http://mirrors.aliyun.com/mysql/MySQL-8.0
-          DOWN_ADDR_MYSQL_BK=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-8.0
-          DOWN_ADDR_MYSQL_BK2=http://repo.huaweicloud.com/mysql/Downloads/MySQL-8.0
+          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-8.0
+          DOWN_ADDR_MYSQL_BK=http://repo.huaweicloud.com/mysql/Downloads/MySQL-8.0
+          DOWN_ADDR_MYSQL_BK2=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-8.0
         else
           DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-8.0
           DOWN_ADDR_MYSQL_BK=https://mirrors.dotsrc.org/mysql/Downloads/MySQL-8.0
@@ -143,9 +143,9 @@ checkDownload() {
       2)
         # MySQL 5.7
         if [ "${IPADDR_COUNTRY}"x == "CN"x ]; then
-          DOWN_ADDR_MYSQL=http://mirrors.aliyun.com/mysql/MySQL-5.7
-          DOWN_ADDR_MYSQL_BK=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-5.7
-          DOWN_ADDR_MYSQL_BK2=http://repo.huaweicloud.com/mysql/Downloads/MySQL-5.7
+          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-5.7
+          DOWN_ADDR_MYSQL_BK=http://repo.huaweicloud.com/mysql/Downloads/MySQL-5.7
+          DOWN_ADDR_MYSQL_BK2=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-5.7
         else
           DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-5.7
           DOWN_ADDR_MYSQL_BK=https://mirrors.dotsrc.org/mysql/Downloads/MySQL-5.7
