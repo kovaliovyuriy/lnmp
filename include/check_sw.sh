@@ -38,7 +38,7 @@ installDepsDebian() {
 
   # Install needed packages
   case "${Debian_ver}" in
-    9|10|11)
+    9|10|11|12)
       pkgList="debian-keyring debian-archive-keyring build-essential gcc g++ make cmake autoconf libjpeg62-turbo-dev libjpeg-dev libpng-dev libgd-dev libxml2 libxml2-dev zlib1g zlib1g-dev libc6 libc6-dev libc-client2007e-dev libglib2.0-0 libglib2.0-dev bzip2 libzip-dev libbz2-1.0 libncurses5 libncurses5-dev libaio1 libaio-dev numactl libreadline-dev curl libcurl3-gnutls libcurl4-openssl-dev e2fsprogs libkrb5-3 libkrb5-dev libltdl-dev libidn11 libidn11-dev openssl net-tools libssl-dev libtool libevent-dev bison re2c libsasl2-dev libxslt1-dev libicu-dev locales patch vim zip unzip tmux htop bc dc expect libexpat1-dev libonig-dev libtirpc-dev rsync git lsof lrzsz rsyslog cron logrotate chrony libsqlite3-dev psmisc wget sysv-rc apt-transport-https ca-certificates software-properties-common gnupg ufw"
       ;;
     *)
@@ -83,6 +83,11 @@ installDepsRHEL() {
   elif [ "${RHEL_ver}" == '7' ]; then
     [ -z "`grep -w epel /etc/yum.repos.d/*.repo`" ] && yum -y install epel-release
     yum -y groupremove "Basic Web Server" "MySQL Database server" "MySQL Database client"
+  fi
+
+  if [ "${RHEL_ver}" == '9' ]; then
+    [ ! -e "/usr/lib64/libtinfo.so.5" ] && ln -s /usr/lib64/libtinfo.so.6 /usr/lib64/libtinfo.so.5
+    [ ! -e "/usr/lib64/libncurses.so.5" ] && ln -s /usr/lib64/libncurses.so.6 /usr/lib64/libncurses.so.5
   fi
 
   echo "${CMSG}Installing dependencies packages...${CEND}"
