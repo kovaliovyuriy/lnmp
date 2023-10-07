@@ -50,7 +50,7 @@ Show_Help() {
   --apache_mode_option [1-2]  Apache2.4 mode, 1(default): php-fpm, 2: mod_php
   --apache_mpm_option [1-3]   Apache2.4 MPM, 1(default): event, 2: prefork, 3: worker
   --php_option [1-12]         Install PHP version
-  --mphp_ver [53~81]          Install another PHP version (PATH: ${php_install_dir}\${mphp_ver})
+  --mphp_ver [53~82]          Install another PHP version (PATH: ${php_install_dir}\${mphp_ver})
   --mphp_addons               Only install another PHP addons
   --phpcache_option [1-4]     Install PHP opcode cache, default: 1 opcache
   --php_extensions [ext name] Install PHP extensions, include zendguardloader,ioncube,
@@ -68,11 +68,12 @@ Show_Help() {
   --phpmyadmin                Install phpMyAdmin
   --ssh_port [No.]            SSH port
   --firewall                  Enable firewall
+  --md5sum                    Check md5sum
   --reboot                    Restart the server after installation
   "
 }
 ARG_NUM=$#
-TEMP=`getopt -o hvV --long help,version,nginx_option:,apache,apache_mode_option:,apache_mpm_option:,php_option:,mphp_ver:,mphp_addons,phpcache_option:,php_extensions:,nodejs,tomcat_option:,jdk_option:,db_option:,dbrootpwd:,dbinstallmethod:,pureftpd,redis,memcached,phpmyadmin,ssh_port:,firewall,reboot -- "$@" 2>/dev/null`
+TEMP=`getopt -o hvV --long help,version,nginx_option:,apache,apache_mode_option:,apache_mpm_option:,php_option:,mphp_ver:,mphp_addons,phpcache_option:,php_extensions:,nodejs,tomcat_option:,jdk_option:,db_option:,dbrootpwd:,dbinstallmethod:,pureftpd,redis,memcached,phpmyadmin,ssh_port:,firewall,md5sum,reboot -- "$@" 2>/dev/null`
 [ $? != 0 ] && echo "${CWARNING}ERROR: unknown argument! ${CEND}" && Show_Help && exit 1
 eval set -- "${TEMP}"
 while :; do
@@ -110,7 +111,7 @@ while :; do
       ;;
     --mphp_ver)
       mphp_ver=$2; mphp_flag=y; shift 2
-      [[ ! "${mphp_ver}" =~ ^5[3-6]$|^7[0-4]$|^8[0-1]$ ]] && { echo "${CWARNING}mphp_ver input error! Please only input number 53~81${CEND}"; exit 1; }
+      [[ ! "${mphp_ver}" =~ ^5[3-6]$|^7[0-4]$|^8[0-2]$ ]] && { echo "${CWARNING}mphp_ver input error! Please only input number 53~82${CEND}"; exit 1; }
       ;;
     --mphp_addons)
       mphp_addons_flag=y; shift 1
@@ -196,6 +197,9 @@ while :; do
     --firewall)
       firewall_flag=y; shift 1
       ;;
+    --md5sum)
+      md5sum_flag=y; shift 1
+      ;;
     --reboot)
       reboot_flag=y; shift 1
       ;;
@@ -207,6 +211,35 @@ while :; do
       ;;
   esac
 done
+
+# Check md5sum
+if [ ${ARG_NUM} == 0 ]; then
+  # Check md5sum
+  while :; do echo
+    read -e -p "Do you want to check md5sum? [y/n]: " md5sum_flag
+    if [[ ! ${md5sum_flag} =~ ^[y,n]$ ]]; then
+      echo "${CWARNING}input error! Please only input 'y' or 'n'${CEND}"
+    else
+      break
+    fi
+  done
+fi
+if [ "${md5sum_flag}" == 'y' ]; then
+  [ -e "${oneinstack_dir}.tar.gz" ] && oneinstack_file=${oneinstack_dir}.tar.gz
+  [ -e "${oneinstack_dir}-full.tar.gz" ] && oneinstack_file=${oneinstack_dir}-full.tar.gz
+  oneinstack_tgz=${oneinstack_file##*/}
+  if [ -e "${oneinstack_file}" ]; then
+    now_oneinstack_md5=$(md5sum ${oneinstack_file} | awk '{print $1}')
+    latest_oneinStack_md5=$(curl --connect-timeout 3 -m 5 -s ${mirror_link}/md5sum.txt | grep ${oneinstack_tgz} | awk '{print $1}')
+    if [ "${now_oneinstack_md5}" != "${latest_oneinStack_md5}" ]; then
+      echo "${CFAILURE}Error: The md5 value of the installation package does not match the official website, please download again, url: ${mirror_link}/${oneinstack_tgz}${CEND}"
+      exit 1
+    fi
+  else
+    echo "${CFAILURE}Error: ${oneinstack_file} does not exist${CEND}"
+    exit 1
+  fi
+fi
 
 # Use default SSH port 22. If you use another SSH port on your server
 if [ -e "/etc/ssh/sshd_config" ]; then
