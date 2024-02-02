@@ -61,7 +61,7 @@ installDepsRHEL() {
       dnf config-manager --set-enabled ol9_codeready_builder
       dnf -y install chrony oniguruma-devel rpcgen
     else
-      dnf -y --enablerepo=crb install chrony oniguruma-devel rpcgen
+      dnf -y --enablerepo=crb install chrony oniguruma-devel rpcgen libtirpc-devel
     fi
     systemctl enable chronyd
   elif [ "${RHEL_ver}" == '8' ]; then

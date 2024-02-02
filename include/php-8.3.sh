@@ -8,7 +8,7 @@
 #       https://oneinstack.com
 #       https://github.com/oneinstack/oneinstack
 
-Install_PHP70() {
+Install_PHP83() {
   pushd ${oneinstack_dir}/src > /dev/null
   if [ ! -e "/usr/local/lib/libiconv.la" ]; then
     tar xzf libiconv-${libiconv_ver}.tar.gz
@@ -23,7 +23,7 @@ Install_PHP70() {
     tar xzf curl-${curl_ver}.tar.gz
     pushd curl-${curl_ver} > /dev/null
     [ -e "/usr/local/lib/libnghttp2.so" ] && with_nghttp2='--with-nghttp2=/usr/local'
-    ./configure --prefix=${curl_install_dir} ${php70_with_ssl} ${with_nghttp2}
+    ./configure --prefix=${curl_install_dir} ${php83_with_ssl} ${with_nghttp2}
     make -j ${THREAD} && make install
     popd > /dev/null
     rm -rf curl-${curl_ver}
@@ -40,18 +40,32 @@ Install_PHP70() {
     rm -rf freetype-${freetype_ver}
   fi
 
-  if [ ! -e "/usr/local/bin/libmcrypt-config" -a ! -e "/usr/bin/libmcrypt-config" ]; then
-    tar xzf libmcrypt-${libmcrypt_ver}.tar.gz
-    pushd libmcrypt-${libmcrypt_ver} > /dev/null
+  if [ ! -e "/usr/local/lib/pkgconfig/libargon2.pc" ]; then
+    tar xzf argon2-${argon2_ver}.tar.gz
+    pushd argon2-${argon2_ver} > /dev/null
+    make -j ${THREAD} && make install
+    [ ! -d /usr/local/lib/pkgconfig ] && mkdir -p /usr/local/lib/pkgconfig
+    /bin/cp libargon2.pc /usr/local/lib/pkgconfig/
+    popd > /dev/null
+    rm -rf argon2-${argon2_ver}
+  fi
+
+  if [ ! -e "/usr/local/lib/libsodium.la" ]; then
+    tar xzf libsodium-${libsodium_ver}.tar.gz
+    pushd libsodium-${libsodium_ver} > /dev/null
+    ./configure --disable-dependency-tracking --enable-minimal
+    make -j ${THREAD} && make install
+    popd > /dev/null
+    rm -rf libsodium-${libsodium_ver}
+  fi
+
+  if [ ! -e "/usr/local/lib/libzip.la" ]; then
+    tar xzf libzip-${libzip_ver}.tar.gz
+    pushd libzip-${libzip_ver} > /dev/null
     ./configure
     make -j ${THREAD} && make install
-    ldconfig
-    pushd libltdl > /dev/null
-    ./configure --enable-ltdl-install
-    make -j ${THREAD} && make install
     popd > /dev/null
-    popd > /dev/null
-    rm -rf libmcrypt-${libmcrypt_ver}
+    rm -rf libzip-${libzip_ver}
   fi
 
   if [ ! -e "/usr/local/include/mhash.h" -a ! -e "/usr/include/mhash.h" ]; then
@@ -67,19 +81,8 @@ Install_PHP70() {
   ldconfig
 
   if [ "${PM}" == 'yum' ]; then
-    [ ! -e "/usr/bin/libmcrypt-config" ] && ln -s /usr/local/bin/libmcrypt-config /usr/bin/libmcrypt-config
     [ ! -e "/lib64/libpcre.so.1" ] && ln -s /lib64/libpcre.so.0.0.1 /lib64/libpcre.so.1
     [ ! -e "/usr/lib/libc-client.so" ] && ln -s /usr/lib64/libc-client.so /usr/lib/libc-client.so
-  fi
-
-  if [ ! -e "/usr/local/bin/mcrypt" -a ! -e "/usr/bin/mcrypt" ]; then
-    tar xzf mcrypt-${mcrypt_ver}.tar.gz
-    pushd mcrypt-${mcrypt_ver} > /dev/null
-    ldconfig
-    ./configure
-    make -j ${THREAD} && make install
-    popd > /dev/null
-    rm -rf mcrypt-${mcrypt_ver}
   fi
 
   id -g ${run_group} >/dev/null 2>&1
@@ -87,34 +90,34 @@ Install_PHP70() {
   id -u ${run_user} >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -g ${run_group} -M -s /sbin/nologin ${run_user}
 
-  tar xzf php-${php70_ver}.tar.gz
-  pushd php-${php70_ver}
+  tar xzf php-${php83_ver}.tar.gz
+  pushd php-${php83_ver} > /dev/null
   make clean
+  export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$PKG_CONFIG_PATH
   [ ! -d "${php_install_dir}" ] && mkdir -p ${php_install_dir}
-  { [ ${RHEL_ver} -ge 9 >/dev/null 2>&1 ] || [ ${Debian_ver} -ge 10 >/dev/null 2>&1 ] || [ ${Ubuntu_ver} -ge 19 >/dev/null 2>&1 ]; } || intl_modules_options='--enable-intl'
   [ "${phpcache_option}" == '1' ] && phpcache_arg='--enable-opcache' || phpcache_arg='--disable-opcache'
   if [ "${apache_mode_option}" == '2' ]; then
     ./configure --prefix=${php_install_dir} --with-config-file-path=${php_install_dir}/etc \
     --with-config-file-scan-dir=${php_install_dir}/etc/php.d \
     --with-apxs2=${apache_install_dir}/bin/apxs ${phpcache_arg} --disable-fileinfo \
     --enable-mysqlnd --with-mysqli=mysqlnd --with-pdo-mysql=mysqlnd \
-    --with-iconv-dir=/usr/local --with-freetype-dir=${freetype_install_dir} --with-jpeg-dir --with-png-dir --with-zlib \
-    --with-libxml-dir=/usr --enable-xml --disable-rpath --enable-bcmath --enable-shmop --enable-exif \
-    --enable-sysvsem --enable-inline-optimization ${php70_with_curl} --enable-mbregex \
-    --enable-mbstring --with-mcrypt --with-gd --enable-gd-native-ttf ${php70_with_openssl} \
-    --with-mhash --enable-pcntl --enable-sockets --with-xmlrpc --enable-ftp --with-xsl ${intl_modules_options} \
-    --with-gettext --enable-zip --enable-soap --disable-debug ${php_modules_options}
+    --with-iconv=/usr/local --with-freetype --with-jpeg --with-zlib \
+    --enable-xml --disable-rpath --enable-bcmath --enable-shmop --enable-exif \
+    --enable-sysvsem ${php83_with_curl} --enable-mbregex \
+    --enable-mbstring --with-password-argon2 --with-sodium=/usr/local --enable-gd ${php83_with_openssl} \
+    --with-mhash --enable-pcntl --enable-sockets --enable-ftp --enable-intl --with-xsl \
+    --with-gettext --with-zip=/usr/local --enable-soap --disable-debug ${php_modules_options}
   else
     ./configure --prefix=${php_install_dir} --with-config-file-path=${php_install_dir}/etc \
     --with-config-file-scan-dir=${php_install_dir}/etc/php.d \
     --with-fpm-user=${run_user} --with-fpm-group=${run_group} --enable-fpm ${phpcache_arg} --disable-fileinfo \
     --enable-mysqlnd --with-mysqli=mysqlnd --with-pdo-mysql=mysqlnd \
-    --with-iconv-dir=/usr/local --with-freetype-dir=${freetype_install_dir} --with-jpeg-dir --with-png-dir --with-zlib \
-    --with-libxml-dir=/usr --enable-xml --disable-rpath --enable-bcmath --enable-shmop --enable-exif \
-    --enable-sysvsem --enable-inline-optimization ${php70_with_curl} --enable-mbregex \
-    --enable-mbstring --with-mcrypt --with-gd --enable-gd-native-ttf ${php70_with_openssl} \
-    --with-mhash --enable-pcntl --enable-sockets --with-xmlrpc --enable-ftp --with-xsl ${intl_modules_options} \
-    --with-gettext --enable-zip --enable-soap --disable-debug ${php_modules_options}
+    --with-iconv=/usr/local --with-freetype --with-jpeg --with-zlib \
+    --enable-xml --disable-rpath --enable-bcmath --enable-shmop --enable-exif \
+    --enable-sysvsem ${php83_with_curl} --enable-mbregex \
+    --enable-mbstring --with-password-argon2 --with-sodium=/usr/local --enable-gd ${php83_with_openssl} \
+    --with-mhash --enable-pcntl --enable-sockets --enable-ftp --enable-intl --with-xsl \
+    --with-gettext --with-zip=/usr/local --enable-soap --disable-debug ${php_modules_options}
   fi
   make ZEND_EXTRA_LIBS='-liconv' -j ${THREAD}
   make install
@@ -169,7 +172,6 @@ opcache.use_cwd=1
 opcache.validate_timestamps=1
 opcache.revalidate_freq=60
 ;opcache.save_comments=0
-opcache.fast_shutdown=1
 opcache.consistency_checks=0
 ;opcache.optimization_level=0
 EOF
@@ -269,6 +271,6 @@ EOF
     systemctl restart httpd
   fi
   popd > /dev/null
-  [ -e "${php_install_dir}/bin/phpize" ] && rm -rf php-${php70_ver}
+  [ -e "${php_install_dir}/bin/phpize" ] && rm -rf php-${php83_ver}
   popd > /dev/null
 }

@@ -13,7 +13,7 @@ Install_GraphicsMagick() {
     echo "${CWARNING}GraphicsMagick already installed! ${CEND}"
   else
     pushd ${oneinstack_dir}/src > /dev/null
-    tar xzf GraphicsMagick-${graphicsmagick_ver}.tar.gz
+    tar xJf GraphicsMagick-${graphicsmagick_ver}.tar.xz
     pushd GraphicsMagick-${graphicsmagick_ver} > /dev/null
     ./configure --prefix=${gmagick_install_dir} --enable-shared --enable-static --enable-symbol-prefix
     make -j ${THREAD} && make install
