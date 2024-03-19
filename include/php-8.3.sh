@@ -77,6 +77,15 @@ Install_PHP83() {
     rm -rf mhash-${mhash_ver}
   fi
 
+  if [ ! -e "/usr/local/include/bfd.h" -a "${RHEL_ver}" == "8" ]; then
+    tar xzf binutils-${binutils_ver}.tar.gz
+    pushd binutils-${binutils_ver}
+    ./configure
+    make -j ${THREAD} && make install
+    popd > /dev/null
+    rm -rf binutils-${binutils_ver}
+  fi
+
   [ -z "`grep /usr/local/lib /etc/ld.so.conf.d/*.conf`" ] && echo '/usr/local/lib' > /etc/ld.so.conf.d/local.conf
   ldconfig
 
