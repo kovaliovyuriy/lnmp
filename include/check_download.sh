@@ -107,15 +107,7 @@ checkDownload() {
     case "${db_option}" in
       1)
         # MySQL 8.0
-        if [ "${OUTIP_STATE}"x == "China"x ]; then
-          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-8.0
-          DOWN_ADDR_MYSQL_BK=https://mirrors.aliyun.com/mysql/MySQL-8.0
-          DOWN_ADDR_MYSQL_BK2=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-8.0
-        else
-          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-8.0
-          DOWN_ADDR_MYSQL_BK=https://mirrors.dotsrc.org/mysql/Downloads/MySQL-8.0
-        fi
-
+        DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-8.0
         if [ "${dbinstallmethod}" == '1' ]; then
           echo "Download MySQL 8.0 binary package..."
           FILE_NAME=mysql-${mysql80_ver}-linux-glibc2.12-x86_64.tar.xz
@@ -128,10 +120,10 @@ checkDownload() {
         src_url=${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 && Download_src
         # verifying download
         MYSQL_TAR_MD5=$(awk '{print $1}' ${FILE_NAME}.md5)
-        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
+        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
         tryDlCount=0
         while [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" != "${MYSQL_TAR_MD5}" ]; do
-          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME};sleep 1
+          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL}/${FILE_NAME};sleep 1
           let "tryDlCount++"
           [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" == "${MYSQL_TAR_MD5}" -o "${tryDlCount}" == '6' ] && break || continue
         done
@@ -142,15 +134,7 @@ checkDownload() {
         ;;
       2)
         # MySQL 5.7
-        if [ "${OUTIP_STATE}"x == "China"x ]; then
-          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-5.7
-          DOWN_ADDR_MYSQL_BK=https://mirrors.aliyun.com/mysql/MySQL-5.7
-          DOWN_ADDR_MYSQL_BK2=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-5.7
-        else
-          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-5.7
-          DOWN_ADDR_MYSQL_BK=https://mirrors.dotsrc.org/mysql/Downloads/MySQL-5.7
-        fi
-
+        DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-5.7
         if [ "${dbinstallmethod}" == '1' ]; then
           echo "Download MySQL 5.7 binary package..."
           FILE_NAME=mysql-${mysql57_ver}-linux-glibc2.12-x86_64.tar.gz
@@ -163,10 +147,10 @@ checkDownload() {
         src_url=${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 && Download_src
         # verifying download
         MYSQL_TAR_MD5=$(awk '{print $1}' ${FILE_NAME}.md5)
-        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
+        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
         tryDlCount=0
         while [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" != "${MYSQL_TAR_MD5}" ]; do
-          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME};sleep 1
+          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL}/${FILE_NAME};sleep 1
           let "tryDlCount++"
           [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" == "${MYSQL_TAR_MD5}" -o "${tryDlCount}" == '6' ] && break || continue
         done
@@ -177,15 +161,7 @@ checkDownload() {
         ;;
       3)
         # MySQL 5.6
-        if [ "${OUTIP_STATE}"x == "China"x ]; then
-          DOWN_ADDR_MYSQL=http://mirrors.aliyun.com/mysql/MySQL-5.6
-          DOWN_ADDR_MYSQL_BK=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-5.6
-          DOWN_ADDR_MYSQL_BK2=https://mirrors.aliyun.com/mysql/MySQL-5.6
-        else
-          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-5.6
-          DOWN_ADDR_MYSQL_BK=https://mirrors.dotsrc.org/mysql/Downloads/MySQL-5.6
-        fi
-
+        DOWN_ADDR_MYSQL=http://mirrors.aliyun.com/mysql/MySQL-5.6
         if [ "${dbinstallmethod}" == '1' ]; then
           echo "Download MySQL 5.6 binary package..."
           FILE_NAME=mysql-${mysql56_ver}-linux-glibc2.12-x86_64.tar.gz
@@ -198,10 +174,10 @@ checkDownload() {
         src_url=${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 && Download_src
         # verifying download
         MYSQL_TAR_MD5=$(awk '{print $1}' ${FILE_NAME}.md5)
-        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
+        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
         tryDlCount=0
         while [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" != "${MYSQL_TAR_MD5}" ]; do
-          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME};sleep 1
+          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL}/${FILE_NAME};sleep 1
           let "tryDlCount++"
           [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" == "${MYSQL_TAR_MD5}" -o "${tryDlCount}" == '6' ] && break || continue
         done
@@ -212,15 +188,7 @@ checkDownload() {
         ;;
       4)
         # MySQL 5.5
-        if [ "${OUTIP_STATE}"x == "China"x ]; then
-          DOWN_ADDR_MYSQL=http://mirrors.aliyun.com/mysql/MySQL-5.5
-          DOWN_ADDR_MYSQL_BK=http://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-5.5
-          DOWN_ADDR_MYSQL_BK2=https://mirrors.aliyun.com/mysql/MySQL-5.5
-        else
-          DOWN_ADDR_MYSQL=https://cdn.mysql.com/Downloads/MySQL-5.5
-          DOWN_ADDR_MYSQL_BK=https://mirrors.dotsrc.org/mysql/Downloads/MySQL-5.5
-        fi
-
+        DOWN_ADDR_MYSQL=http://mirrors.aliyun.com/mysql/MySQL-5.5
         if [ "${dbinstallmethod}" == '1' ]; then
           echo "Download MySQL 5.5 binary package..."
           FILE_NAME=mysql-${mysql55_ver}-linux-glibc2.12-x86_64.tar.gz
@@ -234,10 +202,10 @@ checkDownload() {
         src_url=${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 && Download_src
         # verifying download
         MYSQL_TAR_MD5=$(awk '{print $1}' ${FILE_NAME}.md5)
-        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
+        [ -z "${MYSQL_TAR_MD5}" ] && MYSQL_TAR_MD5=$(curl -s ${DOWN_ADDR_MYSQL}/${FILE_NAME}.md5 | grep ${FILE_NAME} | awk '{print $1}')
         tryDlCount=0
         while [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" != "${MYSQL_TAR_MD5}" ]; do
-          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL_BK}/${FILE_NAME};sleep 1
+          wget -c --no-check-certificate ${DOWN_ADDR_MYSQL}/${FILE_NAME};sleep 1
           let "tryDlCount++"
           [ "$(md5sum ${FILE_NAME} | awk '{print $1}')" == "${MYSQL_TAR_MD5}" -o "${tryDlCount}" == '6' ] && break || continue
         done
